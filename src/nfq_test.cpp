@@ -7,10 +7,10 @@
 #include <linux/netfilter.h>        /* for NF_ACCEPT */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 #include <errno.h>
-#include <map>
+#include <unordered_map>
 #include <main.h>
 
-std::map<uint32_t, const char *> dnsCacheMap;
+std::unordered_map<uint32_t, const char *> dnsCacheMap;
 FILE *sitesFile;
 
 void printIpAddress(IN const char *prefix, IN uint32_t ipAddress) {
@@ -161,8 +161,8 @@ static bool isFiltered(struct nfq_data *tb, u_int32_t &id)
 #ifdef VERBOSE
             printf("[*] 2. TCP Packet\n");
 #endif
-            result = result || isFound(ntohl(ipPacket->destinationIp));
-            result = result || isFound(ntohl(ipPacket->sourceIp));
+            result = result || isFound(ntohl(ipPacket->destinationIp))
+                            || isFound(ntohl(ipPacket->sourceIp));
         }
     }
 
@@ -261,6 +261,7 @@ int main(int argc, char **argv)
     nfq_close(h);
     if(sitesFile) {
         fclose(sitesFile);
+        sitesFile = NULL;
     }
     for(auto iterator=dnsCacheMap.begin(); iterator != dnsCacheMap.end(); iterator++) {
         if(iterator->second) {
